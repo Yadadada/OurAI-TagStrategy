@@ -1,0 +1,151 @@
+{
+  "sampleSize": 500,
+  "distribution": {
+    "secure": {
+      "count": 71,
+      "percent": 14.2
+    },
+    "anxious-preoccupied": {
+      "count": 259,
+      "percent": 51.8
+    },
+    "dismissive-avoidant": {
+      "count": 35,
+      "percent": 7
+    },
+    "fearful-avoidant": {
+      "count": 135,
+      "percent": 27
+    }
+  },
+  "confidence": {
+    "high": 146,
+    "medium": 354,
+    "low": 0
+  },
+  "axes": {
+    "anxious": {
+      "mean": 60.4,
+      "median": 58,
+      "p25": 50,
+      "p75": 75,
+      "std": 17.04
+    },
+    "avoidant": {
+      "mean": 39.52,
+      "median": 42,
+      "p25": 25,
+      "p75": 50,
+      "std": 17.5
+    },
+    "secure": {
+      "mean": 37.03,
+      "median": 42,
+      "p25": 25,
+      "p75": 50,
+      "std": 15.51
+    }
+  },
+  "samplePerStyle": {
+    "secure": [
+      {
+        "id": "ab52a6d0-5971-5dd2-ab52-a6d059715dd2",
+        "username": "小棠",
+        "anxious": 33,
+        "avoidant": 0,
+        "secure": 67
+      },
+      {
+        "id": "2c269dd7-7d62-eb9d-2c26-9dd77d62eb9d",
+        "username": "青禾630",
+        "anxious": 33,
+        "avoidant": 17,
+        "secure": 67
+      },
+      {
+        "id": "2a269ab1-59dc-2d1b-2a26-9ab159dc2d1b",
+        "username": "阿叶",
+        "anxious": 42,
+        "avoidant": 33,
+        "secure": 58
+      }
+    ],
+    "anxious-preoccupied": [
+      {
+        "id": "b152b042-35ea-9f50-b152-b04235ea9f50",
+        "username": "素年",
+        "anxious": 50,
+        "avoidant": 33,
+        "secure": 50
+      },
+      {
+        "id": "b252b1d5-bbd6-69bb-b252-b1d5bbd669bb",
+        "username": "南野",
+        "anxious": 75,
+        "avoidant": 33,
+        "secure": 25
+      },
+      {
+        "id": "b052aeaf-c7ad-fe91-b052-aeafc7adfe91",
+        "username": "林夕833",
+        "anxious": 50,
+        "avoidant": 33,
+        "secure": 50
+      }
+    ],
+    "dismissive-avoidant": [
+      {
+        "id": "9b2e0859-d756-5fef-9b2e-0859d7565fef",
+        "username": "柚子",
+        "anxious": 42,
+        "avoidant": 58,
+        "secure": 42
+      },
+      {
+        "id": "981ef916-dc8d-3504-981e-f916dc8d3504",
+        "username": "kai",
+        "anxious": 33,
+        "avoidant": 50,
+        "secure": 50
+      },
+      {
+        "id": "a63f62cb-2034-b4c9-a63f-62cb2034b4c9",
+        "username": "lina",
+        "anxious": 33,
+        "avoidant": 58,
+        "secure": 42
+      }
+    ],
+    "fearful-avoidant": [
+      {
+        "id": "af52ad1c-41c2-3426-af52-ad1c41c23426",
+        "username": "玖月",
+        "anxious": 58,
+        "avoidant": 50,
+        "secure": 42
+      },
+      {
+        "id": "ad52a9f6-4d99-c8fc-ad52-a9f64d99c8fc",
+        "username": "七月",
+        "anxious": 92,
+        "avoidant": 50,
+        "secure": 8
+      },
+      {
+        "id": "9f2e0ea5-bfa7-3643-9f2e-0ea5bfa73643",
+        "username": "阿岚606",
+        "anxious": 58,
+        "avoidant": 67,
+        "secure": 33
+      }
+    ]
+  },
+  "publishedReference": {
+    "source": "Mickelson, Kessler & Shaver 1997 (US national sample, n=8098)",
+    "secure_pct": 59,
+    "anxious_pct": 11,
+    "avoidant_pct": 25,
+    "fearful_pct": 5
+  },
+  "ranAt": "2026-05-08T05:38:59.001Z"
+}

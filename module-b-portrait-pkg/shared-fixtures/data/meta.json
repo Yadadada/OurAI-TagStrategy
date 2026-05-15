@@ -1,0 +1,9 @@
+{
+  "generated_at": "2026-05-07T13:41:32.630Z",
+  "seed": 42,
+  "user_count": 500,
+  "match_count": 2000,
+  "holdout_user_count": 1000,
+  "upstream_commit": "2996e56564b6b0a4697581075918352c07be8cc8",
+  "notes": "Synthetic ECNU campus dating fixtures, generated from coursework distributions. Not derived from and not mappable to any real user. ground_truth_score is a hidden target; do not use it as an input feature for scorers — only for evaluation."
+}

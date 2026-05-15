@@ -1,0 +1,44 @@
+{
+  "name": "@coursework/sample-b",
+  "version": "1.0.0",
+  "description": "Module B reference submission — questionnaire & portrait with attachment-style sub-scale, echarts-wordcloud, and LLM personality narrative",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n vite,api -c cyan,magenta \"vite\" \"tsx watch src/server/index.ts\"",
+    "dev:web": "vite",
+    "dev:api": "tsx src/server/index.ts",
+    "build": "tsc -p tsconfig.json && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:contract": "vitest run contracts/",
+    "fixtures:gen": "npm --prefix ../../shared-fixtures run generate:small",
+    "experiment:attachment": "tsx scripts/experiment-attachment.ts",
+    "experiment:narrative": "tsx scripts/experiment-narrative.ts"
+  },
+  "dependencies": {
+    "@coursework/shared-fixtures": "file:../../shared-fixtures",
+    "clsx": "^2.1.0",
+    "echarts": "^5.5.0",
+    "echarts-for-react": "^3.0.2",
+    "echarts-wordcloud": "^2.1.0",
+    "express": "^4.21.0",
+    "lucide-react": "^0.460.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.0.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "concurrently": "^9.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vite": "^5.4.0",
+    "vitest": "^2.1.0"
+  }
+}

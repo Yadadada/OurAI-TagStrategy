@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-cn">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ourai 校园帮 · 模块 B（问卷与画像）</title>
+    <!--
+      Tailwind via Play CDN keeps the vendored PersonaCardView (heavy Tailwind classes)
+      visually faithful without forcing students to set up a full Tailwind toolchain.
+      Swap to a real Tailwind config when you're ready.
+    -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root { color-scheme: light; }
+      body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #fdf7f3; color: #2d3a2d; }
+      #root { min-height: 100vh; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

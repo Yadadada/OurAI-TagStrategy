@@ -1,0 +1,74 @@
+{
+  "ranAt": "2026-05-08T05:23:37.386Z",
+  "stats": {
+    "n": 5,
+    "llmHits": 5,
+    "fallbacks": 0,
+    "avgLatencyMs": 34807,
+    "medianLatencyMs": 38127,
+    "minLatencyMs": 21001,
+    "maxLatencyMs": 49403
+  },
+  "samples": [
+    {
+      "user_id": "b152b042-35ea-9f50-b152-b04235ea9f50",
+      "username": "素年",
+      "mbti_type": "ENTJ",
+      "archetype": "推进型领导者",
+      "attachment_style": "焦虑型",
+      "narrative": "在镜头和食谱里追求完美的人，也习惯在生活中占据主导。逻辑清晰，社交游刃有余，对未知的热情驱动不断探索。感情中却格外谨慎，总在对方的只言片语里寻找安全感，既想靠近彼此，又容易过度诠释那些模糊信号。",
+      "narrativeLength": 97,
+      "source": "llm",
+      "latencyMs": 22541,
+      "modelId": "claude-haiku"
+    },
+    {
+      "user_id": "be7bcd5d-e5f0-4423-be7b-cd5de5f04423",
+      "username": "青禾",
+      "mbti_type": "INTP",
+      "archetype": "深思的探究者",
+      "attachment_style": "矛盾型",
+      "narrative": "你是在故事和逻辑中闪闪发光的人。小说、写作、剧本杀让你的创意展现，思维敏锐也支持你推动想法。只是感情里显得矛盾——既渴望靠近陪伴，又害怕被伤；在主动和退缩间反复摇摆，用谨慎守护了心中的渴望。",
+      "narrativeLength": 95,
+      "source": "llm",
+      "latencyMs": 49403,
+      "modelId": "claude-haiku"
+    },
+    {
+      "user_id": "61c84a9c-c5ac-5fd6-61c8-4a9cc5ac5fd6",
+      "username": "阿叶939",
+      "mbti_type": "ENFP",
+      "archetype": "热情的连接者",
+      "attachment_style": "焦虑型",
+      "narrative": "你总能从小说、游戏和剧本杀的故事中看见可能性，用好奇心去拼凑碎片，善于连接每个人的想法与情绪。这份热情让你和谁都能聊出火花，但在感情中容易放大对方的暗示，既渴望深深被理解，又在反复确认他是否真的在意。",
+      "narrativeLength": 100,
+      "source": "llm",
+      "latencyMs": 42964,
+      "modelId": "claude-haiku"
+    },
+    {
+      "user_id": "e05fb0c7-58c6-fe69-e05f-b0c758c6fe69",
+      "username": "羽川",
+      "mbti_type": "INTJ",
+      "archetype": "战略型独行者",
+      "attachment_style": "矛盾型",
+      "narrative": "你在代码中构造精密的逻辑世界，却在照顾宠物时展露温柔。高度的好奇心推着你不断探索编程和科研，开放的心智容纳各种可能。但在亲密关系里，你时而靠近，时而退缩，既渴望被深深陪伴，又害怕展露内心的脆弱。",
+      "narrativeLength": 97,
+      "source": "llm",
+      "latencyMs": 38127,
+      "modelId": "claude-haiku"
+    },
+    {
+      "user_id": "035bb2a6-43d2-6f7c-035b-b2a643d26f7c",
+      "username": "cici",
+      "mbti_type": "ENFJ",
+      "archetype": "温暖的引路人",
+      "attachment_style": "焦虑型",
+      "narrative": "你是进房间就能点亮气氛的人，心里装着别人的梦想，在公益、小说和创作中找到深刻共鸣。外向热情让你善于鼓励和组织，责任心驱使事事完善。在亲密关系里，你渴望深层理解和陪伴，也容易读出言外之意，反复咀嚼那些可能只是随口一说的话。",
+      "narrativeLength": 110,
+      "source": "llm",
+      "latencyMs": 21001,
+      "modelId": "claude-haiku"
+    }
+  ]
+}

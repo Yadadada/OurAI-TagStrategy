@@ -1,0 +1,27 @@
+{
+  "name": "@coursework/shared-fixtures",
+  "version": "0.1.0",
+  "description": "Synthetic dating fixtures generator (shared across modules A-F)",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./questionnaire": "./dist/questionnaire.js",
+    "./data/users.json": "./data/users.json",
+    "./data/matches.json": "./data/matches.json",
+    "./data/holdout.json": "./data/holdout.json"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "generate": "tsx src/cli.ts",
+    "generate:small": "tsx src/cli.ts --users 500 --matches 2000 --seed 42",
+    "generate:large": "tsx src/cli.ts --users 10000 --matches 50000 --seed 42"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

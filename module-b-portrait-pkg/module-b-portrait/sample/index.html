@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-cn">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ourai 校园帮 · 你的画像</title>
+    <!--
+      Tailwind via Play CDN keeps the vendored PersonaCardView (heavy Tailwind classes)
+      visually faithful without forcing a full Tailwind toolchain.
+    -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root { color-scheme: light; }
+      html { background-color: #fffefd; }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Roboto, Helvetica, Arial, sans-serif;
+        background: linear-gradient(180deg, #fffefd 0%, #fff8f4 46%, #fef3ed 100%);
+        color: #533944;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      html, body, #root { min-height: 100%; }
+    </style>
+  </head>
+  <body>
+    <!--
+      The vendored personaCard.ts runs `process.env.X` at module load to read
+      production-side config (model ids, review tokens, Qwen API key). None of
+      that branch executes in the browser, but the top-level expression itself
+      throws ReferenceError without a process polyfill. We hand it an empty
+      env so module load succeeds, then the actual algorithm functions run.
+    -->
+    <script>
+      window.process = window.process || { env: {}, platform: 'browser', versions: { node: '0.0.0' } };
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
