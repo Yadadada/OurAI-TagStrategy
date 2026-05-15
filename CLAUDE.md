@@ -83,11 +83,21 @@ The `buildUserVector` algorithm depends on exactly 24 answer keys:
 
 ### Contract tests
 
-`contracts/` contains two vitest suites that pin the public API surface:
+`contracts/` contains three vitest suites that pin the public API surface:
 - `persona-card.contract.test.ts`: 25 standard types, 15-dim vector shape, `PersonaCardPayload` key presence
 - `questionnaire.contract.test.ts`: exactly 24 answer keys, 18 Likert defaults 1–7
+- `text-tags.contract.test.ts`: tag tree stability (Q22=5, Q23=5, Q24=7 main tags), extraction output shape
 
 These must pass before any PR merges back to the upstream Ourai repo.
+
+### Text tag extraction
+
+`src/tagTree.ts` + `src/textTagExtractor.ts` 实现"固定主标签 + 半开放子标签"的文本标签抽取：
+- Q22 (intro_prompt): 5 场景主标签 + 强/弱互动横切维度
+- Q23 (q19): 5 个关系雷区主标签
+- Q24 (q20): 7 个补充要求主标签
+- 调用 OpenAI 兼容协议 LLM，输出带 weight + quote 的结构化标签
+- 无 API Key 时自动降级为关键词匹配
 
 ### Stubs
 
@@ -98,5 +108,42 @@ These must pass before any PR merges back to the upstream Ourai repo.
 - `QWEN_API_KEY` — Dashscope API key for LLM generation
 - `QWEN_BASE_URL` — optional, defaults to `https://dashscope.aliyuncs.com/compatible-mode/v1`
 - `DATING_PERSONA_CARD_MODEL_ID` / `DATING_RELATIONSHIP_SUMMARY_MODEL_ID` — model override (default: `qwen-plus`)
+- `DATING_TAG_MODEL_ID` — text tag extraction model override (default: `qwen-plus`)
 - `PERSONA_FALLBACK_MODEL_ID` — fallback model if primary fails (default: `qwen-turbo`)
 - `CAMPUS_REVIEW_TOKEN` — allows unauthenticated preview via `x-campus-review-token` header
+
+## 本地运行（使用非 Dashscope 的 LLM proxy）
+
+项目默认使用通义千问 Dashscope API。如果本地有 OpenAI 兼容协议的 proxy（如 LiteLLM、OneAPI 等），需要：
+
+1. 在 `module-b-portrait-pkg/module-b-portrait/` 下创建 `.env` 文件（已被 .gitignore 忽略）：
+
+```
+QWEN_API_KEY=你的API_Key
+QWEN_BASE_URL=http://你的proxy地址/openai/v1
+DATING_TAG_MODEL_ID=你的模型名
+```
+
+2. 运行测试脚本验证标签抽取：
+
+```powershell
+cd module-b-portrait-pkg/module-b-portrait
+npx tsx scripts/test-tag-extraction.ts
+```
+
+3. 启动 dev server 需要在 shell 中先设置环境变量再启动：
+
+```powershell
+# PowerShell
+$env:QWEN_API_KEY="你的API_Key"
+$env:QWEN_BASE_URL="http://你的proxy地址/openai/v1"
+$env:DATING_TAG_MODEL_ID="你的模型名"
+npm run dev
+```
+
+```bash
+# Bash / Git Bash
+QWEN_API_KEY=你的API_Key QWEN_BASE_URL=http://你的proxy地址/openai/v1 DATING_TAG_MODEL_ID=你的模型名 npm run dev
+```
+
+**注意**：`.env` 文件仅被测试脚本 (`scripts/test-tag-extraction.ts`) 自动加载。`npm run dev` 启动的 server 不会自动读 `.env`，需要手动设置环境变量或使用 `cross-env` 等工具。

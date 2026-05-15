@@ -20,9 +20,11 @@ import {
   type TagCategory,
 } from './tagTree.js';
 
-const TAG_MODEL_ID = process.env.DATING_TAG_MODEL_ID
-  || process.env.QWEN_TAG_MODEL_ID
-  || 'qwen-plus';
+function getTagModelId(): string {
+  return process.env.DATING_TAG_MODEL_ID
+    || process.env.QWEN_TAG_MODEL_ID
+    || 'qwen-plus';
+}
 
 // ---------------------------------------------------------------------------
 // Prompt 构造
@@ -106,7 +108,7 @@ async function callTagLlm(prompt: string): Promise<string | null> {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: TAG_MODEL_ID,
+        model: getTagModelId(),
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.1,
         max_tokens: 800,
@@ -275,7 +277,7 @@ export async function extractQ22Tags(text: string): Promise<Q22TagResult> {
     sceneTags,
     interactionMode,
     extractedAt: new Date().toISOString(),
-    modelId: TAG_MODEL_ID,
+    modelId: getTagModelId(),
   };
 }
 
@@ -306,7 +308,7 @@ export async function extractQ23Q24Tags(fieldId: 'q19' | 'q20', text: string): P
     rawText: trimmed,
     tags,
     extractedAt: new Date().toISOString(),
-    modelId: TAG_MODEL_ID,
+    modelId: getTagModelId(),
   };
 }
 
