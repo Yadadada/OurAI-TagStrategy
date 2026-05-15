@@ -30,6 +30,7 @@ import {
   type SbtiTypeDef,
   type LMH,
 } from './personaCardTypes';
+import { extractAllTextTags, type Q22TagResult, type TextTagResult } from './textTagExtractor';
 
 const PERSONA_MODEL_ID = process.env.DATING_PERSONA_CARD_MODEL_ID
   || process.env.DATING_RELATIONSHIP_SUMMARY_MODEL_ID
@@ -886,6 +887,11 @@ export interface PersonaCardPayload {
     triggerKeyword: string | null;
   };
   consolidatedScores?: ConsolidatedScore[];
+  textTags?: {
+    q22: Q22TagResult;
+    q23: TextTagResult;
+    q24: TextTagResult;
+  };
 }
 
 function buildProfileFromRow(row: any): Record<string, unknown> {
@@ -982,6 +988,13 @@ async function generatePersonaCardFromSource(source: PersonaSource): Promise<Per
 
   const { vector: userVec } = buildUserVector(answers, profile);
 
+  // 文本标签抽取（与后续流程并行无关，先发起异步）
+  const textTagsPromise = extractAllTextTags({
+    intro_prompt: typeof profile.intro_prompt === 'string' ? profile.intro_prompt : '',
+    q19: typeof answers.q19 === 'string' ? (answers.q19 as string) : '',
+    q20: typeof answers.q20 === 'string' ? (answers.q20 as string) : '',
+  });
+
   // 1) 检测隐藏人格触发
   const trigger = detectHiddenTrigger(answers, profile);
 
@@ -1068,6 +1081,9 @@ async function generatePersonaCardFromSource(source: PersonaSource): Promise<Per
   const consolidatedScores = buildConsolidatedScores(answers, profile);
   const consolidatedHit = consolidatedScores.filter((s) => s.percent >= 50).length;
 
+  // 等待文本标签抽取结果
+  const textTags = await textTagsPromise;
+
   const payload: PersonaCardPayload = {
     code: primaryType.code,
     nickname,
@@ -1102,6 +1118,7 @@ async function generatePersonaCardFromSource(source: PersonaSource): Promise<Per
     },
     reading: { summary, highlights, references },
     consolidatedScores,
+    textTags,
     meta: {
       generatedAt: new Date().toISOString(),
       llmModelId: PERSONA_MODEL_ID,
