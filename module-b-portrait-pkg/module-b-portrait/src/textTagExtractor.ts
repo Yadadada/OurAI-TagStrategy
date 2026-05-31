@@ -18,6 +18,7 @@ import {
   type TextTagResult,
   type InteractionMode,
   type TagCategory,
+  type TokenUsage,
 } from './tagTree.js';
 
 function getTagModelId(): string {
@@ -34,6 +35,113 @@ function buildTagTreeBlock(categories: TagCategory[]): string {
   return categories.map((cat) =>
     `- **${cat.id}**（${cat.label}）：${cat.description}\n  预设子标签：${cat.presetSubs.join('、')}`
   ).join('\n');
+}
+
+// ---------------------------------------------------------------------------
+// Few-shot 例子库（用 DATING_TAG_FEW_SHOT=1 启用）
+//
+// 选取标准：normal 典型 + longtail 网络用语 + boundary 多标签 + empty 空判
+// 每字段 4 条，对应样本 ID 在 eval/run-eval.ts 的 FEW_SHOT_IDS 中剔除以保证评测公平。
+// ---------------------------------------------------------------------------
+
+const FEW_SHOT_Q22 = [
+  {
+    text: '想找个咖啡馆坐坐聊聊天',
+    reasoning: '用户想去咖啡馆并聊天，"咖啡馆"对应 food_social 的预设子标签，"聊聊天"是强互动信号词。',
+    output: '{"reasoning":"用户想去咖啡馆并聊天，咖啡馆对应 food_social，聊天是强互动信号。","scene_tags":[{"main":"food_social","sub":"咖啡馆","weight":0.95,"quote":"咖啡馆坐坐"}],"interaction_mode":"strong"}',
+  },
+  {
+    text: 'citywalk',
+    reasoning: 'citywalk 是网络用语，指漫无目的逛街/散步，归 stroll；文本未出现互动信号词，互动模式判 null。',
+    output: '{"reasoning":"citywalk 是网络用语指漫无目的散步，归 stroll；无互动信号词，interaction_mode 判 null。","scene_tags":[{"main":"stroll","sub":"citywalk","weight":1.0,"quote":"citywalk"}],"interaction_mode":null}',
+  },
+  {
+    text: '一起吃饭，吃完散步聊聊天',
+    reasoning: '同时提到吃饭（food_social）和散步（stroll），双主标签；"聊聊天"是强互动信号。',
+    output: '{"reasoning":"同时有吃饭（food_social）和散步（stroll），双标签；聊聊天=强互动。","scene_tags":[{"main":"food_social","sub":"吃饭","weight":0.6,"quote":"一起吃饭"},{"main":"stroll","sub":"散步","weight":0.4,"quote":"散步聊聊天"}],"interaction_mode":"strong"}',
+  },
+  {
+    text: '都行',
+    reasoning: '"都行"属于无意义回答，返回空数组。',
+    output: '{"reasoning":"无意义回答。","scene_tags":[],"interaction_mode":null}',
+  },
+];
+
+const FEW_SHOT_Q23 = [
+  {
+    text: '已读不回最受不了',
+    reasoning: '"已读不回"是 communication_breakdown 的预设子标签，沟通断裂的典型表达。',
+    output: '{"reasoning":"已读不回是 communication_breakdown 的典型表达。","tags":[{"main":"communication_breakdown","sub":"已读不回","weight":1.0,"quote":"已读不回"}]}',
+  },
+  {
+    text: '喜欢画大饼',
+    reasoning: '"画大饼"是网络用语，指口头承诺却不兑现，本质是不诚实，归 dishonesty。',
+    output: '{"reasoning":"画大饼=承诺不兑现=不诚实，归 dishonesty。","tags":[{"main":"dishonesty","sub":"画大饼","weight":1.0,"quote":"画大饼"}]}',
+  },
+  {
+    text: '忽冷忽热，吵架还冷暴力',
+    reasoning: '"忽冷忽热"是情感忽视（emotional_neglect）；"吵架冷暴力"是沟通断裂（communication_breakdown），两个主标签并列。',
+    output: '{"reasoning":"忽冷忽热=情感忽视；冷暴力=沟通断裂；双主标签。","tags":[{"main":"emotional_neglect","sub":"忽冷忽热","weight":0.5,"quote":"忽冷忽热"},{"main":"communication_breakdown","sub":"冷暴力","weight":0.5,"quote":"吵架还冷暴力"}]}',
+  },
+  {
+    text: '',
+    reasoning: '空文本，返回空数组。',
+    output: '{"reasoning":"空文本。","tags":[]}',
+  },
+];
+
+const FEW_SHOT_Q24 = [
+  {
+    text: '希望对方性格开朗幽默一点',
+    reasoning: '"开朗"和"幽默"都是性格描述词，归 personality。',
+    output: '{"reasoning":"开朗、幽默都是性格描述，归 personality。","tags":[{"main":"personality","sub":"开朗幽默","weight":1.0,"quote":"性格开朗幽默"}]}',
+  },
+  {
+    text: '最好是infp或者isfp，不要太e',
+    reasoning: 'infp/isfp 是 MBTI 人格类型，"e" 在 MBTI 语境指外向；这是用 MBTI 网络用语描述性格偏好，归 personality。',
+    output: '{"reasoning":"infp/isfp 和 e 都是 MBTI 网络用语描述性格偏好，归 personality。","tags":[{"main":"personality","sub":"MBTI偏好","weight":1.0,"quote":"infp或者isfp，不要太e"}]}',
+  },
+  {
+    text: '穿搭好看一点，正常身材，长相端正，不要抽烟喝酒',
+    reasoning: '前半"穿搭/身材/长相"都是 appearance；后半"不抽烟喝酒"是 lifestyle 范畴，双主标签。',
+    output: '{"reasoning":"穿搭/身材/长相=appearance；不抽烟喝酒=lifestyle；双主标签。","tags":[{"main":"appearance","sub":"穿搭身材","weight":0.6,"quote":"穿搭好看，正常身材，长相端正"},{"main":"lifestyle","sub":"不抽烟喝酒","weight":0.4,"quote":"不要抽烟喝酒"}]}',
+  },
+  {
+    text: '都行',
+    reasoning: '无意义回答，返回空数组。',
+    output: '{"reasoning":"无意义回答。","tags":[]}',
+  },
+];
+
+function fewShotEnabled(): boolean {
+  return process.env.DATING_TAG_FEW_SHOT === '1';
+}
+
+function cotEnabled(): boolean {
+  return process.env.DATING_TAG_COT === '1';
+}
+
+function buildFewShotBlock(examples: { text: string; reasoning: string; output: string }[]): string {
+  if (!fewShotEnabled()) return '';
+  const lines = ['', '## 示例（仿照下列例子的输出格式与标签归类）'];
+  for (const ex of examples) {
+    lines.push(`输入：${ex.text || '（空字符串）'}`);
+    lines.push(`输出：${ex.output}`);
+    lines.push('');
+  }
+  return lines.join('\n');
+}
+
+function buildCotBlock(): string {
+  if (!cotEnabled()) return '';
+  return [
+    '',
+    '## 推理要求（重要）',
+    '在输出 JSON 中包含 reasoning 字段（一句话，30 字内）：',
+    '1. 如果文本含网络用语/隐喻（中央空调、PUA、画大饼、爹味、infp/e、citywalk 等），先用通俗语言解释这个词在恋爱语境的含义',
+    '2. 然后说明该含义为什么对应所选主标签',
+    '示例：reasoning="中央空调=对多人都暖、没专一，本质是不忠诚，归 dishonesty"',
+  ].join('\n');
 }
 
 function buildQ22Prompt(text: string): string {
@@ -57,7 +165,8 @@ function buildQ22Prompt(text: string): string {
     '',
     '## 输出格式',
     '{"scene_tags":[{"main":"主标签ID","sub":"子标签","weight":0.9,"quote":"原文片段"}],"interaction_mode":"strong"|"weak"|null}',
-    '',
+    buildCotBlock(),
+    buildFewShotBlock(FEW_SHOT_Q22),
     `## 用户回答\n${text}`,
   ].join('\n');
 }
@@ -67,6 +176,7 @@ function buildQ23Q24Prompt(fieldId: 'q19' | 'q20', text: string): string {
   const fieldLabel = fieldId === 'q19'
     ? '你最受不了一段关系里出现什么状态'
     : '对对方的补充要求';
+  const fewShotExamples = fieldId === 'q19' ? FEW_SHOT_Q23 : FEW_SHOT_Q24;
 
   return [
     `你是一个标签抽取助手。根据用户对"${fieldLabel}"的回答，提取结构化标签。`,
@@ -82,7 +192,8 @@ function buildQ23Q24Prompt(fieldId: 'q19' | 'q20', text: string): string {
     '',
     '## 输出格式',
     '{"tags":[{"main":"主标签ID","sub":"子标签","weight":0.9,"quote":"原文片段"}]}',
-    '',
+    buildCotBlock(),
+    buildFewShotBlock(fewShotExamples),
     `## 用户回答\n${text}`,
   ].join('\n');
 }
@@ -91,7 +202,7 @@ function buildQ23Q24Prompt(fieldId: 'q19' | 'q20', text: string): string {
 // LLM 调用
 // ---------------------------------------------------------------------------
 
-async function callTagLlm(prompt: string): Promise<string | null> {
+async function callTagLlm(prompt: string): Promise<{ content: string; usage: TokenUsage | null } | null> {
   const apiKey = process.env.QWEN_API_KEY?.trim();
   if (!apiKey) {
     console.warn('[text-tag-extractor] QWEN_API_KEY not configured');
@@ -111,7 +222,7 @@ async function callTagLlm(prompt: string): Promise<string | null> {
         model: getTagModelId(),
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.1,
-        max_tokens: 800,
+        max_tokens: 1200,
         response_format: { type: 'json_object' },
       }),
       signal: controller.signal,
@@ -122,7 +233,15 @@ async function callTagLlm(prompt: string): Promise<string | null> {
       return null;
     }
     const data: any = await res.json();
-    return data?.choices?.[0]?.message?.content ?? null;
+    const content = data?.choices?.[0]?.message?.content;
+    if (typeof content !== 'string') return null;
+    const u = data?.usage;
+    const usage: TokenUsage | null = u && typeof u === 'object' ? {
+      promptTokens: typeof u.prompt_tokens === 'number' ? u.prompt_tokens : 0,
+      completionTokens: typeof u.completion_tokens === 'number' ? u.completion_tokens : 0,
+      totalTokens: typeof u.total_tokens === 'number' ? u.total_tokens : 0,
+    } : null;
+    return { content, usage };
   } catch (error) {
     console.error('[text-tag-extractor] LLM call failed', error);
     return null;
@@ -263,8 +382,9 @@ export async function extractQ22Tags(text: string): Promise<Q22TagResult> {
   if (!apiKey) return fallbackQ22(trimmed);
 
   const prompt = buildQ22Prompt(trimmed);
-  const raw = await callTagLlm(prompt);
-  if (!raw) return fallbackQ22(trimmed);
+  const llmResult = await callTagLlm(prompt);
+  if (!llmResult) return fallbackQ22(trimmed);
+  const { content: raw, usage } = llmResult;
 
   const sceneTags = parseTagJson(raw, getMainIdsForField('intro_prompt'));
   const interactionMode = parseInteractionMode(raw);
@@ -278,6 +398,7 @@ export async function extractQ22Tags(text: string): Promise<Q22TagResult> {
     interactionMode,
     extractedAt: new Date().toISOString(),
     modelId: getTagModelId(),
+    usage,
   };
 }
 
@@ -297,8 +418,9 @@ export async function extractQ23Q24Tags(fieldId: 'q19' | 'q20', text: string): P
   if (!apiKey) return fallbackQ23Q24(fieldId, trimmed);
 
   const prompt = buildQ23Q24Prompt(fieldId, trimmed);
-  const raw = await callTagLlm(prompt);
-  if (!raw) return fallbackQ23Q24(fieldId, trimmed);
+  const llmResult = await callTagLlm(prompt);
+  if (!llmResult) return fallbackQ23Q24(fieldId, trimmed);
+  const { content: raw, usage } = llmResult;
 
   const tags = parseTagJson(raw, getMainIdsForField(fieldId));
   if (tags.length === 0) return fallbackQ23Q24(fieldId, trimmed);
@@ -309,6 +431,7 @@ export async function extractQ23Q24Tags(fieldId: 'q19' | 'q20', text: string): P
     tags,
     extractedAt: new Date().toISOString(),
     modelId: getTagModelId(),
+    usage,
   };
 }
 

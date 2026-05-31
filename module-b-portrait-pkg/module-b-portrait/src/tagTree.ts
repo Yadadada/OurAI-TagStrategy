@@ -30,6 +30,12 @@ export interface ExtractedTag {
 
 export type InteractionMode = 'strong' | 'weak' | null;
 
+export interface TokenUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
 export interface Q22TagResult {
   fieldId: 'intro_prompt';
   rawText: string;
@@ -37,6 +43,7 @@ export interface Q22TagResult {
   interactionMode: InteractionMode;
   extractedAt: string;
   modelId: string;
+  usage?: TokenUsage | null;
 }
 
 export interface TextTagResult {
@@ -45,6 +52,7 @@ export interface TextTagResult {
   tags: ExtractedTag[];
   extractedAt: string;
   modelId: string;
+  usage?: TokenUsage | null;
 }
 
 export type AnyTagResult = Q22TagResult | TextTagResult;

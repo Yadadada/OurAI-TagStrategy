@@ -44,6 +44,19 @@ try {
 const args = process.argv.slice(2);
 const fieldFilter = args.includes('--field') ? args[args.indexOf('--field') + 1] : null;
 const noLlm = args.includes('--no-llm');
+const datasetArg = args.includes('--dataset') ? args[args.indexOf('--dataset') + 1] : 'seeds';
+if (!['seeds', 'expanded', 'all'].includes(datasetArg)) {
+  console.error(`--dataset 取值非法：${datasetArg}（可选 seeds/expanded/all）`);
+  process.exit(1);
+}
+const excludeFewShot = args.includes('--exclude-few-shot');
+
+// few-shot 例子来自这些样本，评测时需剔除以保证公平（与 textTagExtractor.ts 中的 FEW_SHOT_* 同步）
+const FEW_SHOT_IDS = new Set<string>([
+  'q22-001', 'q22-009', 'q22-011', 'q22-013',
+  'q23-001', 'q23-009', 'q23-011', 'q23-014',
+  'q24-001', 'q24-010', 'q24-013', 'q24-003',
+]);
 
 if (noLlm) {
   // 强制清空 API Key 触发 fallback 路径
@@ -75,6 +88,9 @@ interface EvalRecord {
   extractedInteraction: 'strong' | 'weak' | null;
   modelId: string;
   latencyMs: number;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
   mainCorrect: boolean;
   subCorrect: boolean;
   interactionCorrect: boolean | null;
@@ -85,17 +101,23 @@ interface EvalRecord {
 // 读取种子样本
 // ---------------------------------------------------------------------------
 
-function loadSeeds(filename: string): SeedSample[] {
-  const path = resolve(projectRoot, 'eval', filename);
-  const content = readFileSync(path, 'utf-8');
+function loadSeeds(filenames: string[]): SeedSample[] {
   const samples: SeedSample[] = [];
-  for (const line of content.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    try {
-      samples.push(JSON.parse(trimmed));
-    } catch (e) {
-      console.warn(`[warn] 解析失败：${filename} 行 "${trimmed.slice(0, 60)}"`);
+  for (const filename of filenames) {
+    const path = resolve(projectRoot, 'eval', filename);
+    if (!existsSync(path)) {
+      console.warn(`[warn] 数据文件不存在，跳过：${filename}`);
+      continue;
+    }
+    const content = readFileSync(path, 'utf-8');
+    for (const line of content.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      try {
+        samples.push(JSON.parse(trimmed));
+      } catch (e) {
+        console.warn(`[warn] 解析失败：${filename} 行 "${trimmed.slice(0, 60)}"`);
+      }
     }
   }
   return samples;
@@ -152,28 +174,39 @@ async function runExtraction(
   interaction: 'strong' | 'weak' | null;
   modelId: string;
   latencyMs: number;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
 }> {
   const start = Date.now();
 
   if (fieldId === 'q22') {
     const result = await extractQ22Tags(text);
+    const u = result.usage;
     return {
       mains: result.sceneTags.map((t) => t.main),
       subs: result.sceneTags.map((t) => t.sub),
       interaction: result.interactionMode,
       modelId: result.modelId,
       latencyMs: Date.now() - start,
+      promptTokens: u?.promptTokens ?? 0,
+      completionTokens: u?.completionTokens ?? 0,
+      totalTokens: u?.totalTokens ?? 0,
     };
   }
 
   const innerFieldId = fieldId === 'q23' ? 'q19' : 'q20';
   const result = await extractQ23Q24Tags(innerFieldId, text);
+  const u = result.usage;
   return {
     mains: result.tags.map((t) => t.main),
     subs: result.tags.map((t) => t.sub),
     interaction: null,
     modelId: result.modelId,
     latencyMs: Date.now() - start,
+    promptTokens: u?.promptTokens ?? 0,
+    completionTokens: u?.completionTokens ?? 0,
+    totalTokens: u?.totalTokens ?? 0,
   };
 }
 
@@ -183,10 +216,18 @@ async function runExtraction(
 
 async function evalField(
   fieldId: 'q22' | 'q23' | 'q24',
-  filename: string,
+  filenames: string[],
 ): Promise<EvalRecord[]> {
-  const samples = loadSeeds(filename);
-  console.log(`\n[${fieldId.toUpperCase()}] 加载 ${samples.length} 条种子样本（${filename}）`);
+  let samples = loadSeeds(filenames);
+  if (excludeFewShot) {
+    const before = samples.length;
+    samples = samples.filter((s) => !FEW_SHOT_IDS.has(s.id));
+    const removed = before - samples.length;
+    if (removed > 0) {
+      console.log(`[${fieldId.toUpperCase()}] 剔除 ${removed} 条 few-shot 样本（公平性）`);
+    }
+  }
+  console.log(`\n[${fieldId.toUpperCase()}] 加载 ${samples.length} 条样本（${filenames.join(' + ')}）`);
 
   const records: EvalRecord[] = [];
   for (let i = 0; i < samples.length; i++) {
@@ -207,6 +248,9 @@ async function evalField(
       extractedInteraction: ext.interaction,
       modelId: ext.modelId,
       latencyMs: ext.latencyMs,
+      promptTokens: ext.promptTokens,
+      completionTokens: ext.completionTokens,
+      totalTokens: ext.totalTokens,
       mainCorrect,
       subCorrect,
       interactionCorrect,
@@ -237,6 +281,15 @@ interface FieldSummary {
   }>;
   byModel: Record<string, number>;
   avgLatencyMs: number;
+  tokenUsage: {
+    samplesWithUsage: number;
+    totalPromptTokens: number;
+    totalCompletionTokens: number;
+    totalTokens: number;
+    avgPromptTokens: number;
+    avgCompletionTokens: number;
+    avgTotalTokens: number;
+  };
   errors: EvalRecord[];
 }
 
@@ -280,6 +333,20 @@ function summarize(records: EvalRecord[]): FieldSummary {
 
   const avgLatencyMs = records.reduce((sum, r) => sum + r.latencyMs, 0) / total;
 
+  const usageRecords = records.filter((r) => r.totalTokens > 0);
+  const totalPromptTokens = usageRecords.reduce((sum, r) => sum + r.promptTokens, 0);
+  const totalCompletionTokens = usageRecords.reduce((sum, r) => sum + r.completionTokens, 0);
+  const totalTokens = usageRecords.reduce((sum, r) => sum + r.totalTokens, 0);
+  const tokenUsage = {
+    samplesWithUsage: usageRecords.length,
+    totalPromptTokens,
+    totalCompletionTokens,
+    totalTokens,
+    avgPromptTokens: usageRecords.length > 0 ? totalPromptTokens / usageRecords.length : 0,
+    avgCompletionTokens: usageRecords.length > 0 ? totalCompletionTokens / usageRecords.length : 0,
+    avgTotalTokens: usageRecords.length > 0 ? totalTokens / usageRecords.length : 0,
+  };
+
   const errors = records.filter((r) => !r.mainCorrect);
 
   return {
@@ -300,6 +367,7 @@ function summarize(records: EvalRecord[]): FieldSummary {
     byCategory,
     byModel,
     avgLatencyMs,
+    tokenUsage,
     errors,
   };
 }
@@ -319,6 +387,10 @@ function renderSummary(s: FieldSummary): string {
   lines.push(`- 样本总数：${s.total}`);
   lines.push(`- 平均耗时：${s.avgLatencyMs.toFixed(0)}ms`);
   lines.push(`- modelId 分布：${Object.entries(s.byModel).map(([k, v]) => `${k}=${v}`).join(', ')}`);
+  if (s.tokenUsage.samplesWithUsage > 0) {
+    const u = s.tokenUsage;
+    lines.push(`- Token 用量（${u.samplesWithUsage} 条带 usage）：合计 ${u.totalTokens}（prompt ${u.totalPromptTokens} + completion ${u.totalCompletionTokens}），平均 ${u.avgTotalTokens.toFixed(0)}/样本（prompt ${u.avgPromptTokens.toFixed(0)} + completion ${u.avgCompletionTokens.toFixed(0)}）`);
+  }
   lines.push('');
   lines.push('### 核心指标');
   lines.push('');
@@ -365,12 +437,22 @@ async function main() {
   console.log(`Base URL: ${process.env.QWEN_BASE_URL || '(default)'}`);
   console.log(`API Key: ${process.env.QWEN_API_KEY ? '已配置' : '未配置（走 fallback）'}`);
   console.log(`字段过滤: ${fieldFilter ?? '全部'}`);
+  console.log(`数据集: ${datasetArg}`);
+  console.log(`Few-shot: ${process.env.DATING_TAG_FEW_SHOT === '1' ? '开启' : '关闭'}`);
+  console.log(`CoT: ${process.env.DATING_TAG_COT === '1' ? '开启' : '关闭'}`);
+  console.log(`剔除 few-shot 样本: ${excludeFewShot ? '是' : '否'}`);
   console.log(`强制 fallback: ${noLlm ? '是' : '否'}`);
 
-  const fieldsToRun: { fieldId: 'q22' | 'q23' | 'q24'; filename: string }[] = [
-    { fieldId: 'q22', filename: 'q22_seeds.jsonl' },
-    { fieldId: 'q23', filename: 'q23_seeds.jsonl' },
-    { fieldId: 'q24', filename: 'q24_seeds.jsonl' },
+  const datasetFiles = (fieldId: string): string[] => {
+    if (datasetArg === 'seeds') return [`${fieldId}_seeds.jsonl`];
+    if (datasetArg === 'expanded') return [`${fieldId}_expanded.jsonl`];
+    return [`${fieldId}_seeds.jsonl`, `${fieldId}_expanded.jsonl`];
+  };
+
+  const fieldsToRun: { fieldId: 'q22' | 'q23' | 'q24'; filenames: string[] }[] = [
+    { fieldId: 'q22', filenames: datasetFiles('q22') },
+    { fieldId: 'q23', filenames: datasetFiles('q23') },
+    { fieldId: 'q24', filenames: datasetFiles('q24') },
   ];
 
   const targets = fieldFilter ? fieldsToRun.filter((f) => f.fieldId === fieldFilter) : fieldsToRun;
@@ -383,18 +465,29 @@ async function main() {
   const summaries: FieldSummary[] = [];
 
   for (const target of targets) {
-    const records = await evalField(target.fieldId, target.filename);
+    const records = await evalField(target.fieldId, target.filenames);
     allRecords.push(...records);
     summaries.push(summarize(records));
   }
 
   // 整体汇总
+  const usageRecordsAll = allRecords.filter((r) => r.totalTokens > 0);
+  const overallTotalPromptTokens = usageRecordsAll.reduce((sum, r) => sum + r.promptTokens, 0);
+  const overallTotalCompletionTokens = usageRecordsAll.reduce((sum, r) => sum + r.completionTokens, 0);
+  const overallTotalTokens = usageRecordsAll.reduce((sum, r) => sum + r.totalTokens, 0);
   const overall = {
     totalSamples: allRecords.length,
     overallMainAcc: allRecords.filter((r) => r.mainCorrect).length / allRecords.length,
     avgLatencyMs: allRecords.reduce((sum, r) => sum + r.latencyMs, 0) / allRecords.length,
     runMode: noLlm ? 'fallback-only' : (process.env.QWEN_API_KEY ? 'llm' : 'no-key-fallback'),
     timestamp: new Date().toISOString(),
+    samplesWithUsage: usageRecordsAll.length,
+    totalPromptTokens: overallTotalPromptTokens,
+    totalCompletionTokens: overallTotalCompletionTokens,
+    totalTokens: overallTotalTokens,
+    avgPromptTokens: usageRecordsAll.length > 0 ? overallTotalPromptTokens / usageRecordsAll.length : 0,
+    avgCompletionTokens: usageRecordsAll.length > 0 ? overallTotalCompletionTokens / usageRecordsAll.length : 0,
+    avgTotalTokens: usageRecordsAll.length > 0 ? overallTotalTokens / usageRecordsAll.length : 0,
   };
 
   // 渲染 Markdown 报告
@@ -407,6 +500,9 @@ async function main() {
   mdLines.push(`- 总样本数：${overall.totalSamples}`);
   mdLines.push(`- **整体主标签准确率：${pct(overall.overallMainAcc)}**`);
   mdLines.push(`- 平均耗时：${overall.avgLatencyMs.toFixed(0)}ms/样本`);
+  if (overall.samplesWithUsage > 0) {
+    mdLines.push(`- **Token 用量**：合计 ${overall.totalTokens}（prompt ${overall.totalPromptTokens} + completion ${overall.totalCompletionTokens}），平均 **${overall.avgTotalTokens.toFixed(0)} tok/样本**（prompt ${overall.avgPromptTokens.toFixed(0)} + completion ${overall.avgCompletionTokens.toFixed(0)}），${overall.samplesWithUsage}/${overall.totalSamples} 条带 usage`);
+  }
   mdLines.push('');
 
   for (const s of summaries) {
