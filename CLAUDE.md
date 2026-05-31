@@ -154,13 +154,13 @@ QWEN_API_KEY=你的API_Key QWEN_BASE_URL=http://你的proxy地址/openai/v1 DATI
 
 ### 阶段一（必做）：评测框架 + Prompt 调优
 
-**方向 1：评测数据集与指标**
+**方向 1：评测数据集与指标** ✅ 已完成
 - 构造模拟样本（覆盖正常、长尾、扰动、边界，每字段约 80-100 条，共约 250 条）
 - 标注格式：`{ rawText, expected_main, expected_sub_contains, should_skip }`
 - 评测脚本运行 `extractQ22Tags` / `extractQ23Q24Tags`，输出主标签准确率、空判召回率
 - 数据集放在 `eval/` 目录，脚本放在 `scripts/run-eval.ts`
 
-**方向 3：Prompt 调优**
+**方向 3：Prompt 调优** ✅ 已完成
 - 基线：当前零样本 prompt（`textTagExtractor.ts`）
 - 实验变体：加 few-shot（2-3 例）、加轻量 CoT 提示
 - 用评测脚本对比各变体，记录准确率 vs token 数，选 Pareto 最优
@@ -184,3 +184,16 @@ QWEN_API_KEY=你的API_Key QWEN_BASE_URL=http://你的proxy地址/openai/v1 DATI
 | 工程优化思路 | 方向 4：请求队列、熔断、可观测性（分析为主，不写代码） |
 | 拓展应用价值 | 方向 5：匹配推荐赋能、冷启动对话、安全过滤（定性+定量分析） |
 | 未来工作 | 方向 4+5 的实现路径 |
+
+## 阶段一已完成成果总结（截至 2026-05-31）
+
+**方向 1（评测数据集与指标）**：通过"人工种子（46 条）+ GPT-4.1 扩充（210 条）+ 10% 人工抽检"的三段式方法构造了 256 条评测集（q22=85 / q23=87 / q24=84），抽检合格率 100%。每条样本带 `category` 字段，按"普通典型 / 长尾网络词 / 多主标签边界 / 空回答 / 扰动"五类分桶，目标比例约 50%/15%/15%/10%/10%，扩充时按 (主标签, category) 网格调度避免 LLM 偷懒只生成普通样本。评测脚本 `scripts/run-eval.ts` 输出主标签准确率、互动维度准确率、子标签命中率、空判召回率，并按 category 分桶报告以定位短板（决策见 ADR-004 / ADR-005）。期间发现并修正了"双人对打运动应算强互动"的标注规则漏洞，沉淀出"种子集 5 分钟廉价回归测试（Baseline #1.5）"作为后续标签树/规则改动的安全检查模板（决策见 ADR-006）。
+
+**方向 3（Prompt 调优）**：在评测集上跑了三组对比实验—— **#4 零样本 / #2 +few-shot / #3 +few-shot+CoT**，few-shot 选取规范为每字段 4 条覆盖"normal / longtail / boundary / empty"四象限、ID 硬编码在 `FEW_SHOT_IDS` 中并通过 `--exclude-few-shot` 标志从评测集剔除（256→244）确保公平（决策见 ADR-007）。在抽取层透传 OpenAI `usage` 字段补齐**成本**这第三轴后得到完整三维数据：#4 精度 97.5% / 1464ms / 732 tok，#2 精度 96.7% / 1603ms / 1036 tok（+41%），#3 精度 97.5% / 1573ms / 1154 tok（+58%）。**反直觉的关键发现**：零样本不是最贵的——它最便宜，且与 #3 并列精度最高；few-shot 的成本主要堆在 prompt 部分（每次调用都付固定 +304 tok 开销）；CoT 在 #2 之上再 +118 prompt tok 仅换回 1 条 longtail 修对，全字段开 CoT 性价比低且对互动维度产生注意力分散副作用（决策见 ADR-008）。最终 PPT 选型从"单一推荐 #2"修订为**场景化矩阵**：极致省钱→#4 / 生产平衡→#2 / longtail 高发字段→按字段开 CoT / 强解释性→#3。
+
+**关键产出物**：
+- `eval/q{22,23,24}_seeds.jsonl`（46 条种子）+ `eval/q{22,23,24}_expanded.jsonl`（210 条扩充）+ `eval/audit/`（抽检记录）
+- `scripts/expand-eval-data.ts`（扩充脚本，含网格调度+去重）
+- `scripts/run-eval.ts`（评测脚本，含 token 三轴聚合 + `--exclude-few-shot` 标志）
+- `eval/BASELINE.md`（Baseline #0~#4 完整数据 + 三维对比 + 修订后选型矩阵）
+- `decisions/ADR-004~008`（5 份决策记录）+ `ai-conversations/03-eval-and-prompt-tuning.md`（关键对话沉淀）
