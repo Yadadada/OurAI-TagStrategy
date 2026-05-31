@@ -1,0 +1,108 @@
+{
+  "fieldId": "q22",
+  "total": 70,
+  "sampleSize": 7,
+  "picked": [
+    {
+      "id": "q22-exp-008",
+      "text": "第一次见面想吃点特色小吃",
+      "expected_main": [
+        "food_social"
+      ],
+      "expected_sub_keywords": [
+        "特色小吃"
+      ],
+      "should_skip": false,
+      "category": "normal",
+      "note": "只提吃小吃，没有明确聊天等互动信号",
+      "expected_interaction": null
+    },
+    {
+      "id": "q22-exp-031",
+      "text": "一起逛校园看看风景",
+      "expected_main": [
+        "stroll"
+      ],
+      "expected_sub_keywords": [
+        "逛校园",
+        "看看风景"
+      ],
+      "should_skip": false,
+      "category": "normal",
+      "note": "描述一起逛但未涉及深度互动",
+      "expected_interaction": null
+    },
+    {
+      "id": "q22-exp-033",
+      "text": "一起在操场散步，顺便聊聊天",
+      "expected_main": [
+        "stroll"
+      ],
+      "expected_sub_keywords": [
+        "操场散步",
+        "聊聊天"
+      ],
+      "should_skip": false,
+      "category": "normal",
+      "note": "明确提到聊天，强互动",
+      "expected_interaction": "strong"
+    },
+    {
+      "id": "q22-exp-037",
+      "text": "想找人陪我一起准备考试",
+      "expected_main": [
+        "study_together"
+      ],
+      "expected_sub_keywords": [
+        "准备考试"
+      ],
+      "should_skip": false,
+      "category": "normal",
+      "note": "表达共同备考，弱互动学习场景",
+      "expected_interaction": "weak"
+    },
+    {
+      "id": "q22-exp-043",
+      "text": "可以约着一起刷题",
+      "expected_main": [
+        "study_together"
+      ],
+      "expected_sub_keywords": [
+        "刷题"
+      ],
+      "should_skip": false,
+      "category": "normal",
+      "note": "一起刷题是典型学习共处，弱互动",
+      "expected_interaction": "weak"
+    },
+    {
+      "id": "q22-exp-057",
+      "text": "约个沉浸式自习，安静摸鱼也行",
+      "expected_main": [
+        "study_together"
+      ],
+      "expected_sub_keywords": [
+        "沉浸式自习",
+        "安静摸鱼"
+      ],
+      "should_skip": false,
+      "category": "longtail",
+      "note": "“沉浸式自习”“摸鱼”为流行词，描述低互动学习共处",
+      "expected_interaction": "weak"
+    },
+    {
+      "id": "q22-exp-070",
+      "text": "其实不太想聊天，一起自习就够了",
+      "expected_main": [
+        "study_together"
+      ],
+      "expected_sub_keywords": [
+        "自习"
+      ],
+      "should_skip": false,
+      "category": "perturbation",
+      "note": "否定聊天、只提一起自习，弱互动且学习共处",
+      "expected_interaction": "weak"
+    }
+  ]
+}

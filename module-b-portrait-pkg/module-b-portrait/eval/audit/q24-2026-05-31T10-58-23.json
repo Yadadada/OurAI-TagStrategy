@@ -1,0 +1,106 @@
+{
+  "fieldId": "q24",
+  "total": 68,
+  "sampleSize": 7,
+  "picked": [
+    {
+      "id": "q24-exp-014",
+      "text": "我喜欢顺其自然的发展，别强求",
+      "expected_main": [
+        "relationship_pace"
+      ],
+      "expected_sub_keywords": [
+        "顺其自然的发展",
+        "别强求"
+      ],
+      "should_skip": false,
+      "category": "normal",
+      "note": "表达相处节奏希望自然推进，属于关系节奏"
+    },
+    {
+      "id": "q24-exp-017",
+      "text": "有各自的生活圈，不要太黏",
+      "expected_main": [
+        "independence"
+      ],
+      "expected_sub_keywords": [
+        "各自的生活圈",
+        "不要太黏"
+      ],
+      "should_skip": false,
+      "category": "normal",
+      "note": "表达了希望双方有各自生活，保持独立"
+    },
+    {
+      "id": "q24-exp-021",
+      "text": "别太依赖我，偶尔各忙各的也可以",
+      "expected_main": [
+        "independence"
+      ],
+      "expected_sub_keywords": [
+        "别太依赖我",
+        "各忙各的"
+      ],
+      "should_skip": false,
+      "category": "normal",
+      "note": "直接表达不希望被依赖，强调独立性"
+    },
+    {
+      "id": "q24-exp-030",
+      "text": "不胖不瘦，运动一点的身材最好",
+      "expected_main": [
+        "appearance"
+      ],
+      "expected_sub_keywords": [
+        "不胖不瘦",
+        "运动一点的身材"
+      ],
+      "should_skip": false,
+      "category": "normal",
+      "note": "体型和身材类型有明确期待"
+    },
+    {
+      "id": "q24-exp-036",
+      "text": "三观要合得来，不能太极端",
+      "expected_main": [
+        "values"
+      ],
+      "expected_sub_keywords": [
+        "三观",
+        "合得来",
+        "极端"
+      ],
+      "should_skip": false,
+      "category": "normal",
+      "note": "三观和处事态度，属于价值观表达"
+    },
+    {
+      "id": "q24-exp-037",
+      "text": "有上进心，能一起成长最好",
+      "expected_main": [
+        "values"
+      ],
+      "expected_sub_keywords": [
+        "上进心",
+        "一起成长"
+      ],
+      "should_skip": false,
+      "category": "normal",
+      "note": "表达上进和共同成长的期望，体现人生观"
+    },
+    {
+      "id": "q24-exp-039",
+      "text": "最好有自己的目标，不随波逐流",
+      "expected_main": [
+        "values"
+      ],
+      "expected_sub_keywords": [
+        "自己的目标",
+        "不随波逐流"
+      ],
+      "should_skip": false,
+      "category": "normal",
+      "note": "个人目标和独立思考，体现人生观价值观"
+    }
+  ]
+}

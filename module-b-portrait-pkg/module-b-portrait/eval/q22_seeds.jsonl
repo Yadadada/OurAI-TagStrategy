@@ -1,0 +1,15 @@
+{"id":"q22-001","text":"想找个咖啡馆坐坐聊聊天","expected_main":["food_social"],"expected_interaction":"strong","expected_sub_keywords":["咖啡"],"should_skip":false,"category":"normal","note":"美食社交+强互动的最典型组合，咖啡是预设子标签，聊天是strong关键词"}
+{"id":"q22-002","text":"一起去图书馆自习就好","expected_main":["study_together"],"expected_interaction":"weak","expected_sub_keywords":["图书馆","自习"],"should_skip":false,"category":"normal","note":"学习共处+弱互动，'就好'隐含不需要太多互动"}
+{"id":"q22-003","text":"还没想好","expected_main":[],"expected_interaction":null,"should_skip":true,"category":"empty","note":"无意义回答，应被EMPTY_TEXT_PATTERNS拦截"}
+{"id":"q22-004","text":"一起去看展","expected_main":["entertainment"],"expected_interaction":null,"expected_sub_keywords":["展览"],"should_skip":false,"category":"normal","note":"看展览，不确定是否会交流很多"}
+{"id":"q22-005","text":"一起约着打场羽毛球","expected_main":["sports_outdoor"],"expected_interaction":"strong","expected_sub_keywords":["打球","羽毛球"],"should_skip":false,"category":"normal","note":"羽毛球属于双人对打类运动，需要持续配合，归强互动"}
+{"id":"q22-006","text":"去学校附近逛逛","expected_main":["stroll"],"expected_interaction":null,"expected_sub_keywords":["逛逛"],"should_skip":false,"category":"normal","note":"没有提到聊聊天也没有说安静散步，所以互动类型归入null"}
+{"id":"q22-007","text":"去吃好吃的，边吃边聊聊天","expected_main":["food_social"],"expected_interaction":"strong","expected_sub_keywords":["好吃的"],"should_skip":false,"category":"normal","note":"美食社交+强互动，提到了吃好吃的和聊聊天"}
+{"id":"q22-008","text":"约上其他朋友一起玩桌游","expected_main":["entertainment"],"expected_interaction":null,"expected_sub_keywords":["桌游"],"should_skip":false,"category":"normal","note":"没有提到双方互动强度，所以填null"}
+{"id":"q22-009","text":"citywalk","expected_main":["stroll"],"expected_interaction":null,"expected_sub_keywords":["citywalk"],"should_skip":false,"category":"longtail","note":"citywalk属于网络用语，也是一起出去逛逛的意思；网络语境隐含轻互动，但文本未明确出现互动信号词，从严判null"}
+{"id":"q22-010","text":"一起出门探店","expected_main":["food_social"],"expected_interaction":null,"expected_sub_keywords":["探店"],"should_skip":false,"category":"longtail","note":"探店一般是探索美食的意思，归入美食社交"}
+{"id":"q22-011","text":"一起吃饭，吃完散步聊聊天","expected_main":["food_social","stroll"],"expected_interaction":"strong","expected_sub_keywords":["吃饭","散步"],"should_skip":false,"category":"boundary","note":"既有吃饭也有散步，同时两个主标签，另外提到了聊天，属于强互动"}
+{"id":"q22-012","text":"去咖啡店聊聊天，或者一起在咖啡店自习","expected_main":["study_together","food_social"],"expected_interaction":null,"expected_sub_keywords":["咖啡店","自习"],"should_skip":false,"category":"boundary","note":"提到咖啡店，但是也说自习或者聊聊天，所以同时2个主标签，并且不确定互动强度"}
+{"id":"q22-013","text":"都行","expected_main":[],"expected_interaction":null,"should_skip":true,"category":"empty","note":"无意义回答"}
+{"id":"q22-014","text":"随便","expected_main":[],"expected_interaction":null,"should_skip":true,"category":"empty","note":"无意义回答"}
+{"id":"q22-015","text":"不想去太吵的地方，找个安静咖啡馆坐坐就行","expected_main":["food_social"],"expected_interaction":"weak","expected_sub_keywords":["咖啡馆","咖啡"],"should_skip":false,"category":"perturbation","note":"带否定词'不想'，但主语义清晰指向美食社交+弱互动"}

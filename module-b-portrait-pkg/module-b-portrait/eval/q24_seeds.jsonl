@@ -1,0 +1,16 @@
+{"id":"q24-001","text":"希望对方性格开朗幽默一点","expected_main":["personality"],"expected_sub_keywords":["开朗","幽默"],"should_skip":false,"category":"normal","note":"性格气质的典型表达，两个并列子标签都覆盖"}
+{"id":"q24-002","text":"最好同校区，不然太远了","expected_main":["location_conditions"],"expected_sub_keywords":["同校区"],"should_skip":false,"category":"normal","note":"地域条件，'不然太远了'是判断依据"}
+{"id":"q24-003","text":"都行","expected_main":[],"expected_interaction":null,"should_skip":true,"category":"empty","note":"'都行'应被EMPTY_TEXT_PATTERNS拦截"}
+{"id":"q24-004","text":"不能接受对方抽烟","expected_main":["lifestyle"],"expected_interaction":null,"expected_sub_keywords":["抽烟"],"should_skip":false,"category":"normal","note":"抽烟属于生活习惯的主标签范畴"}
+{"id":"q24-005","text":"希望慢慢推进关系，不要太着急，可以先做朋友","expected_main":["relationship_pace"],"expected_interaction":null,"expected_sub_keywords":["慢慢推进","不要太着急","先做朋友"],"should_skip":false,"category":"normal","note":"属于关系节奏范畴"}
+{"id":"q24-006","text":"有自己的生活，别天天没事干","expected_main":["independence"],"expected_interaction":null,"expected_sub_keywords":["有自己的生活","没事干"],"should_skip":false,"category":"normal","note":"属于独立性的范畴"}
+{"id":"q24-007","text":"身高至少180，气质干净","expected_main":["appearance"],"expected_interaction":null,"expected_sub_keywords":["身高","180","气质","干净"],"should_skip":false,"category":"normal","note":"属于外貌的范畴"}
+{"id":"q24-008","text":"三观正，认真对待感情，善良","expected_main":["values"],"expected_interaction":null,"expected_sub_keywords":["三观","认真对待感情","善良"],"should_skip":false,"category":"normal","note":"属于三观的范畴"}
+{"id":"q24-009","text":"情绪稳定","expected_main":["personality"],"expected_interaction":null,"expected_sub_keywords":["情绪稳定"],"should_skip":false,"category":"normal","note":"属于性格的范畴"}
+{"id":"q24-010","text":"最好是infp或者isfp，不要太e","expected_main":["personality"],"expected_interaction":null,"expected_sub_keywords":["infp","isfp","e"],"should_skip":false,"category":"longtail","note":"MBTI网络用语，'不要太e'指不要太外向，归性格气质"}
+{"id":"q24-011","text":"不喜欢爹味重的男的","expected_main":["values"],"expected_interaction":null,"expected_sub_keywords":["爹味重"],"should_skip":false,"category":"longtail","note":"爹味是网络流行语，指喜欢说教、自我中心，归三观范畴"}
+{"id":"q24-012","text":"性格活泼一点，最好在一个校区","expected_main":["personality","location_conditions"],"expected_interaction":null,"expected_sub_keywords":["性格","活泼","校区"],"should_skip":false,"category":"boundary","note":"同时横跨两个主标签"}
+{"id":"q24-013","text":"穿搭好看一点，正常身材，长相端正，不要抽烟喝酒","expected_main":["appearance","lifestyle"],"expected_interaction":null,"expected_sub_keywords":["穿搭","好看","正常身材","长相端正","抽烟","喝酒"],"should_skip":false,"category":"boundary","note":"同时横跨两个主标签"}
+{"id":"q24-014","text":"无","expected_main":[],"expected_interaction":null,"expected_sub_keywords":[],"should_skip":true,"category":"empty","note":"无意义回答"}
+{"id":"q24-015","text":"","expected_main":[],"expected_interaction":null,"expected_sub_keywords":[],"should_skip":true,"category":"empty","note":"无意义回答"}
+{"id":"q24-016","text":"不喜欢太粘人","expected_main":["independence"],"expected_interaction":null,"expected_sub_keywords":["粘人"],"should_skip":false,"category":"perturbation","note":"带否定的回答"}

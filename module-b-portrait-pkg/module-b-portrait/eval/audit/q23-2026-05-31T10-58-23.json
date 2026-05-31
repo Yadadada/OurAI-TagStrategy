@@ -1,0 +1,116 @@
+{
+  "fieldId": "q23",
+  "total": 72,
+  "sampleSize": 8,
+  "picked": [
+    {
+      "id": "q23-exp-012",
+      "text": "接受不了欺骗和背着我做事",
+      "expected_main": [
+        "dishonesty"
+      ],
+      "expected_sub_keywords": [
+        "欺骗",
+        "背着我"
+      ],
+      "should_skip": false,
+      "category": "normal",
+      "note": "欺骗和背着做事都表现为不真诚"
+    },
+    {
+      "id": "q23-exp-017",
+      "text": "讨厌那种表里不一的人",
+      "expected_main": [
+        "dishonesty"
+      ],
+      "expected_sub_keywords": [
+        "表里不一"
+      ],
+      "should_skip": false,
+      "category": "normal",
+      "note": "“表里不一”是校园常见说法，代表虚伪不诚实。"
+    },
+    {
+      "id": "q23-exp-023",
+      "text": "说话很敷衍，感觉心不在焉",
+      "expected_main": [
+        "emotional_neglect"
+      ],
+      "expected_sub_keywords": [
+        "很敷衍",
+        "心不在焉"
+      ],
+      "should_skip": false,
+      "category": "normal",
+      "note": "明显表达不用心和敷衍"
+    },
+    {
+      "id": "q23-exp-024",
+      "text": "总是敷衍我的话我无法接受",
+      "expected_main": [
+        "emotional_neglect"
+      ],
+      "expected_sub_keywords": [
+        "敷衍"
+      ],
+      "should_skip": false,
+      "category": "normal",
+      "note": "敷衍属于情感投入不足"
+    },
+    {
+      "id": "q23-exp-030",
+      "text": "不喜欢被限制和谁来往",
+      "expected_main": [
+        "boundary_violation"
+      ],
+      "expected_sub_keywords": [
+        "被限制",
+        "来往"
+      ],
+      "should_skip": false,
+      "category": "normal",
+      "note": "限制社交是边界侵犯"
+    },
+    {
+      "id": "q23-exp-046",
+      "text": "聊天秒变空气人，像在自言自语",
+      "expected_main": [
+        "communication_breakdown"
+      ],
+      "expected_sub_keywords": [
+        "空气人",
+        "自言自语"
+      ],
+      "should_skip": false,
+      "category": "longtail",
+      "note": "空气人是网络流行语，表示对方像消失了一样不回应，属于沟通断裂"
+    },
+    {
+      "id": "q23-exp-055",
+      "text": "最怕遇到查岗狂魔",
+      "expected_main": [
+        "boundary_violation"
+      ],
+      "expected_sub_keywords": [
+        "查岗狂魔"
+      ],
+      "should_skip": false,
+      "category": "longtail",
+      "note": "查岗狂魔是网络用语，指过度监控和干涉，属于边界侵犯"
+    },
+    {
+      "id": "q23-exp-068",
+      "text": "沟通别总是冷处理，真的很难受",
+      "expected_main": [
+        "communication_breakdown"
+      ],
+      "expected_sub_keywords": [
+        "沟通",
+        "冷处理"
+      ],
+      "should_skip": false,
+      "category": "perturbation",
+      "note": "“别总是冷处理”属于带否定的沟通断裂表达"
+    }
+  ]
+}

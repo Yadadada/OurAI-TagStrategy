@@ -5,3 +5,7 @@ dist/
 *.log
 .DS_Store
 .env
+
+# 评测中间产物（不入库）
+eval/expansion-log/
+eval/results/raw-*.json

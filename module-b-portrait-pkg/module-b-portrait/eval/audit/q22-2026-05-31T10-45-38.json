@@ -1,0 +1,84 @@
+{
+  "fieldId": "q22",
+  "total": 21,
+  "sampleSize": 5,
+  "picked": [
+    {
+      "id": "q22-exp-004",
+      "text": "一起去玩密室逃脱吧",
+      "expected_main": [
+        "entertainment"
+      ],
+      "expected_sub_keywords": [
+        "玩密室逃脱"
+      ],
+      "should_skip": false,
+      "category": "normal",
+      "note": "有“一起玩”表述，属于强互动的娱乐体验",
+      "expected_interaction": "strong"
+    },
+    {
+      "id": "q22-exp-008",
+      "text": "一起去河边走走聊聊天",
+      "expected_main": [
+        "stroll"
+      ],
+      "expected_sub_keywords": [
+        "河边",
+        "走走",
+        "聊聊天"
+      ],
+      "should_skip": false,
+      "category": "normal",
+      "note": "河边走走并包含聊天，属于强互动",
+      "expected_interaction": "strong"
+    },
+    {
+      "id": "q22-exp-011",
+      "text": "约个探店，一起拔草网红小吃",
+      "expected_main": [
+        "food_social"
+      ],
+      "expected_sub_keywords": [
+        "探店",
+        "拔草",
+        "网红小吃"
+      ],
+      "should_skip": false,
+      "category": "longtail",
+      "note": "使用“探店”“拔草”等流行网络用语表达美食社交和强互动",
+      "expected_interaction": "strong"
+    },
+    {
+      "id": "q22-exp-016",
+      "text": "先去打打羽毛球，然后一起吃点东西聊聊天",
+      "expected_main": [
+        "sports_outdoor",
+        "food_social"
+      ],
+      "expected_sub_keywords": [
+        "打羽毛球",
+        "吃点东西",
+        "聊聊天"
+      ],
+      "should_skip": false,
+      "category": "boundary",
+      "note": "包含运动和吃饭，两类主标签，并且有聊天属于强互动。",
+      "expected_interaction": "strong"
+    },
+    {
+      "id": "q22-exp-020",
+      "text": "不太想直接约吃饭，随便逛逛校园也不错",
+      "expected_main": [
+        "stroll"
+      ],
+      "expected_sub_keywords": [
+        "逛逛校园"
+      ],
+      "should_skip": false,
+      "category": "perturbation",
+      "note": "否定了直接餐饮邀约，但主语义明确指向校园散步，互动类型未明确提及",
+      "expected_interaction": null
+    }
+  ]
+}
