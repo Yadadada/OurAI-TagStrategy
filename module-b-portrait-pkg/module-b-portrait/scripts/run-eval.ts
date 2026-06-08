@@ -45,8 +45,8 @@ const args = process.argv.slice(2);
 const fieldFilter = args.includes('--field') ? args[args.indexOf('--field') + 1] : null;
 const noLlm = args.includes('--no-llm');
 const datasetArg = args.includes('--dataset') ? args[args.indexOf('--dataset') + 1] : 'seeds';
-if (!['seeds', 'expanded', 'all'].includes(datasetArg)) {
-  console.error(`--dataset 取值非法：${datasetArg}（可选 seeds/expanded/all）`);
+if (!['seeds', 'expanded', 'all', 'holdout'].includes(datasetArg)) {
+  console.error(`--dataset 取值非法：${datasetArg}（可选 seeds/expanded/all/holdout）`);
   process.exit(1);
 }
 const excludeFewShot = args.includes('--exclude-few-shot');
@@ -446,6 +446,7 @@ async function main() {
   const datasetFiles = (fieldId: string): string[] => {
     if (datasetArg === 'seeds') return [`${fieldId}_seeds.jsonl`];
     if (datasetArg === 'expanded') return [`${fieldId}_expanded.jsonl`];
+    if (datasetArg === 'holdout') return [`${fieldId}_holdout.jsonl`];
     return [`${fieldId}_seeds.jsonl`, `${fieldId}_expanded.jsonl`];
   };
 

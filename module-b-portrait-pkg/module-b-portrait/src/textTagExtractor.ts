@@ -199,8 +199,179 @@ function buildQ23Q24Prompt(fieldId: 'q19' | 'q20', text: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// LLM 调用
+// LLM 调用 —— 多 provider 路由
+//
+// 路由规则（按模型 id 前缀）：
+//   anthropic--*  → Anthropic Messages API（POST /messages）
+//   gemini-*      → Google Gemini GenerateContent（POST /models/{id}:generateContent）
+//   其他          → OpenAI 兼容 Chat Completions（POST /chat/completions）
+//
+// Base URL 优先级：DATING_TAG_BASE_URL > QWEN_BASE_URL > Dashscope 默认
+// 跨模型评测时由 run-cross-model-eval.ts 为每个模型注入对应的 DATING_TAG_BASE_URL。
+//
+// JSON 输出策略：
+//   - OpenAI 路径用 response_format: json_object 强制
+//   - Anthropic/Gemini 不支持该字段，改为在 prompt 末尾追加 "仅输出 JSON" 指令
+//     （parseTagJson 已能容忍前后多余空白和 ```json 围栏）
 // ---------------------------------------------------------------------------
+
+type Provider = 'openai' | 'anthropic' | 'gemini';
+
+function detectProvider(modelId: string): Provider {
+  if (modelId.startsWith('anthropic--')) return 'anthropic';
+  if (modelId.startsWith('gemini-')) return 'gemini';
+  return 'openai';
+}
+
+function getDefaultBaseUrl(provider: Provider): string {
+  switch (provider) {
+    case 'anthropic':
+      return 'https://api.anthropic.com/v1';
+    case 'gemini':
+      return 'https://generativelanguage.googleapis.com/v1beta';
+    default:
+      return 'https://dashscope.aliyuncs.com/compatible-mode/v1';
+  }
+}
+
+function getTagBaseUrl(provider: Provider): string {
+  const explicit = process.env.DATING_TAG_BASE_URL?.trim() || process.env.QWEN_BASE_URL?.trim();
+  return (explicit || getDefaultBaseUrl(provider)).replace(/\/+$/, '');
+}
+
+async function callOpenAI(
+  baseUrl: string,
+  apiKey: string,
+  model: string,
+  prompt: string,
+  signal: AbortSignal,
+): Promise<{ content: string; usage: TokenUsage | null } | null> {
+  const res = await fetch(`${baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.1,
+      max_tokens: 1200,
+      response_format: { type: 'json_object' },
+    }),
+    signal,
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    console.error('[text-tag-extractor] OpenAI error', res.status, errText.slice(0, 200));
+    return null;
+  }
+  const data: any = await res.json();
+  const content = data?.choices?.[0]?.message?.content;
+  if (typeof content !== 'string') return null;
+  const u = data?.usage;
+  const usage: TokenUsage | null = u && typeof u === 'object' ? {
+    promptTokens: typeof u.prompt_tokens === 'number' ? u.prompt_tokens : 0,
+    completionTokens: typeof u.completion_tokens === 'number' ? u.completion_tokens : 0,
+    totalTokens: typeof u.total_tokens === 'number' ? u.total_tokens : 0,
+  } : null;
+  return { content, usage };
+}
+
+async function callAnthropic(
+  baseUrl: string,
+  apiKey: string,
+  model: string,
+  prompt: string,
+  signal: AbortSignal,
+): Promise<{ content: string; usage: TokenUsage | null } | null> {
+  // Anthropic 不支持 response_format: json_object，改成 prompt 内强约束
+  const promptWithJsonHint = `${prompt}\n\n严格只输出 JSON 对象本身，不要任何解释、不要 markdown 代码块围栏。`;
+  const res = await fetch(`${baseUrl}/messages`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 1200,
+      temperature: 0.1,
+      messages: [{ role: 'user', content: promptWithJsonHint }],
+    }),
+    signal,
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    console.error('[text-tag-extractor] Anthropic error', res.status, errText.slice(0, 200));
+    return null;
+  }
+  const data: any = await res.json();
+  // Anthropic 响应：content 是 array of {type:'text', text:'...'}
+  const blocks = Array.isArray(data?.content) ? data.content : [];
+  const textBlock = blocks.find((b: any) => b?.type === 'text');
+  const content = typeof textBlock?.text === 'string' ? textBlock.text : null;
+  if (!content) return null;
+  const u = data?.usage;
+  const usage: TokenUsage | null = u && typeof u === 'object' ? {
+    promptTokens: typeof u.input_tokens === 'number' ? u.input_tokens : 0,
+    completionTokens: typeof u.output_tokens === 'number' ? u.output_tokens : 0,
+    totalTokens: (typeof u.input_tokens === 'number' ? u.input_tokens : 0)
+      + (typeof u.output_tokens === 'number' ? u.output_tokens : 0),
+  } : null;
+  return { content, usage };
+}
+
+async function callGemini(
+  baseUrl: string,
+  apiKey: string,
+  model: string,
+  prompt: string,
+  signal: AbortSignal,
+): Promise<{ content: string; usage: TokenUsage | null } | null> {
+  // Gemini 原生支持 responseMimeType: application/json
+  // maxOutputTokens=4096：gemini-2.5-pro 是 thinking 模型，会先消耗 token 在内部推理上，
+  // 1200 对长 prompt + 思考链 + 输出 JSON 三段不够，会出现 finishReason=MAX_TOKENS 但 parts 为空
+  const res = await fetch(`${baseUrl}/models/${model}:generateContent`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.1,
+        maxOutputTokens: 4096,
+        responseMimeType: 'application/json',
+      },
+    }),
+    signal,
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    console.error('[text-tag-extractor] Gemini error', res.status, errText.slice(0, 200));
+    return null;
+  }
+  const data: any = await res.json();
+  const candidate = data?.candidates?.[0];
+  const parts = candidate?.content?.parts;
+  const content = Array.isArray(parts)
+    ? parts.map((p: any) => (typeof p?.text === 'string' ? p.text : '')).join('')
+    : null;
+  if (!content) {
+    // 区分三种空响应原因，便于排查：
+    //   - finishReason=MAX_TOKENS：思考链吃光预算，调高 maxOutputTokens
+    //   - finishReason=SAFETY：被安全过滤
+    //   - finishReason=RECITATION：触发版权过滤
+    //   - 其他（无 candidates）：proxy 异常
+    const finishReason = candidate?.finishReason || 'NO_CANDIDATE';
+    console.error('[text-tag-extractor] Gemini empty response, finishReason=' + finishReason);
+    return null;
+  }
+  const m = data?.usageMetadata;
+  const usage: TokenUsage | null = m && typeof m === 'object' ? {
+    promptTokens: typeof m.promptTokenCount === 'number' ? m.promptTokenCount : 0,
+    completionTokens: typeof m.candidatesTokenCount === 'number' ? m.candidatesTokenCount : 0,
+    totalTokens: typeof m.totalTokenCount === 'number' ? m.totalTokenCount : 0,
+  } : null;
+  return { content, usage };
+}
 
 async function callTagLlm(prompt: string): Promise<{ content: string; usage: TokenUsage | null } | null> {
   const apiKey = process.env.QWEN_API_KEY?.trim();
@@ -208,40 +379,15 @@ async function callTagLlm(prompt: string): Promise<{ content: string; usage: Tok
     console.warn('[text-tag-extractor] QWEN_API_KEY not configured');
     return null;
   }
-  const baseUrl = (process.env.QWEN_BASE_URL?.trim() || 'https://dashscope.aliyuncs.com/compatible-mode/v1').replace(/\/+$/, '');
+  const model = getTagModelId();
+  const provider = detectProvider(model);
+  const baseUrl = getTagBaseUrl(provider);
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15_000);
+  const timeout = setTimeout(() => controller.abort(), 30_000);
   try {
-    const res = await fetch(`${baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: getTagModelId(),
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.1,
-        max_tokens: 1200,
-        response_format: { type: 'json_object' },
-      }),
-      signal: controller.signal,
-    });
-    if (!res.ok) {
-      const errText = await res.text().catch(() => '');
-      console.error('[text-tag-extractor] LLM error', res.status, errText.slice(0, 200));
-      return null;
-    }
-    const data: any = await res.json();
-    const content = data?.choices?.[0]?.message?.content;
-    if (typeof content !== 'string') return null;
-    const u = data?.usage;
-    const usage: TokenUsage | null = u && typeof u === 'object' ? {
-      promptTokens: typeof u.prompt_tokens === 'number' ? u.prompt_tokens : 0,
-      completionTokens: typeof u.completion_tokens === 'number' ? u.completion_tokens : 0,
-      totalTokens: typeof u.total_tokens === 'number' ? u.total_tokens : 0,
-    } : null;
-    return { content, usage };
+    if (provider === 'anthropic') return await callAnthropic(baseUrl, apiKey, model, prompt, controller.signal);
+    if (provider === 'gemini') return await callGemini(baseUrl, apiKey, model, prompt, controller.signal);
+    return await callOpenAI(baseUrl, apiKey, model, prompt, controller.signal);
   } catch (error) {
     console.error('[text-tag-extractor] LLM call failed', error);
     return null;
